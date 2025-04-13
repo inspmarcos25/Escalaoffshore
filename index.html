@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Offshore Otimizado (vFinal Ordem Mobile)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        /* === Base Styles === */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Slightly lighter gray */
+            color: #374151; /* Default text color */
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer; filter: invert(0.6); transition: filter 0.2s ease-in-out;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator:hover { filter: invert(0.4); }
+        .card {
+            background-color: white; border-radius: 0.75rem; /* lg */
+            /* Responsive Padding */
+            padding: 1rem; /* p-4 default */
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+            transition: box-shadow 0.3s ease-in-out;
+             width: 100%; /* Ensure card takes full width of its grid column/flex item */
+             margin-bottom: 0 !important; /* Remove margin-bottom added by default card class if it interferes with gap */
+        }
+        /* Larger padding on medium screens and up */
+         @media (min-width: 768px) { /* md breakpoint */
+             .card { padding: 1.5rem; /* p-6 */ }
+         }
+
+        h2 {
+            /* Responsive Font Size */
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600; color: #1f2937; margin-bottom: 1rem;
+            display: flex; align-items: center; gap: 0.5rem; /* gap-2 */
+        }
+         @media (min-width: 768px) { /* md breakpoint */
+             h2 { font-size: 1.25rem; /* text-xl */ }
+         }
+
+         button, input[type="button"], input[type="submit"] {
+             transition: background-color 0.2s, color 0.2s, box-shadow 0.2s, border-color 0.2s;
+         }
+         button:focus-visible, input:focus-visible {
+             outline: 2px solid #3b82f6; outline-offset: 2px;
+         }
+         input[type="text"]:focus, input[type="date"]:focus {
+              border-color: #3b82f6; box-shadow: 0 0 0 1px #3b82f6;
+         }
+
+
+        /* === Escala Status Badges === */
+        .status-badge {
+            padding: 0.3rem 0.8rem; border-radius: 9999px; font-size: 0.9rem; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 0.35rem; text-transform: uppercase; letter-spacing: 0.025em;
+        }
+        .status-embarcado-badge { color: #166534; background-color: #dcfce7; }
+        .status-folga-badge { color: #92400e; background-color: #ffedd5; }
+        .status-pre-embarque-badge { color: #4338ca; background-color: #e0e7ff; } /* Indigo */
+        .status-desembarque-badge { color: #065f46; background-color: #a7f3d0; }
+
+        /* === Calendário Styles === */
+        .calendar th, .calendar td {
+            text-align: center;
+            padding: 0.3rem 0.1rem; height: 2.5rem; width: calc(100% / 7); font-size: 0.75rem; position: relative;
+        }
+         @media (min-width: 640px) { .calendar th, .calendar td { padding: 0.5rem 0.15rem; height: 2.75rem; font-size: 0.875rem; } }
+        .calendar th { font-weight: 600; color: #4b5563; padding-bottom: 0.75rem;}
+        .calendar td { border-radius: 0.375rem; transition: background-color 0.2s, color 0.2s; }
+        .day-cell { cursor: default; }
+        .other-month { color: #d1d5db; }
+        .current-day { background-color: #3b82f6 !important; color: white !important; font-weight: 700 !important; }
+
+        /* Calendar Day Status Backgrounds */
+        .status-embarcado { background-color: #e0f2fe; color: #0c4a6e; } /* Azul */
+        .status-folga { background-color: #fffbeb; color: #b45309; } /* Laranja/Amarelo */
+        .status-pre-embarque { background-color: #e0e7ff; color: #4338ca; font-weight: 500; } /* Indigo */
+        .status-desembarque { background-color: #f0fdf4; color: #15803d; font-weight: 600; border: 1px solid #bbf7d0;} /* Verde */
+
+        /* Calendar Icons inside Cells */
+        .calendar td .calendar-icon {
+            font-size: 0.8rem; vertical-align: middle; margin-left: 3px;
+            display: inline-block; line-height: 1; color: #6b7280;
+        }
+         @media (min-width: 640px) { .calendar td .calendar-icon { font-size: 0.9rem; margin-left: 4px; } }
+        .status-embarcado .calendar-icon { color: #0c4a6e; }
+        .status-folga .calendar-icon, .status-desembarque .calendar-icon { color: #b45309; }
+        .status-pre-embarque .calendar-icon { color: #4338ca; }
+        .current-day .calendar-icon { color: white; }
+
+        /* Calendar Navigation */
+        .calendar-nav button {
+             background-color: #e5e7eb; color: #374151; border-radius: 0.375rem; font-weight: 500; padding: 0.4rem 0.8rem;
+        }
+         @media (min-width: 640px) { .calendar-nav button { padding: 0.5rem 1rem; } }
+        .calendar-nav button:hover { background-color: #d1d5db; }
+        .calendar-nav span { font-weight: 600; color: #1f2937; min-width: 100px; display: inline-block; text-align: center; font-size: 1rem; }
+         @media (min-width: 640px) { .calendar-nav span { font-size: 1.125rem; min-width: 150px; } }
+
+        /* === Lista de Tarefas Styles === */
+        #taskList li { display: flex; align-items: center; padding: 0.75rem 0.5rem; border-bottom: 1px solid #e5e7eb; transition: background-color 0.2s ease-in-out; min-height: 50px; }
+        #taskList li:last-child { border-bottom: none; }
+        .drag-handle { cursor: grab; color: #9ca3af; padding: 0 0.5rem; transition: color 0.2s; }
+        .drag-handle:hover { color: #4b5563; }
+        .drag-handle ion-icon { font-size: 1.25rem; display: block;}
+        #taskList li input[type="checkbox"] { cursor: pointer; width: 1.15rem; height: 1.15rem; margin-left: 0.5rem; margin-right: 0.75rem; border-radius: 0.25rem; border-color: #d1d5db; color: #3b82f6; transition: border-color 0.2s, background-color 0.2s; flex-shrink: 0; }
+         #taskList li input[type="checkbox"]:focus { ring: 2px; ring-offset-0; ring-blue-500; }
+         #taskList li input[type="checkbox"]:checked { border-color: transparent; background-color: #3b82f6;}
+        #taskList li .task-text-content { flex-grow: 1; margin-right: 0.75rem; min-width: 0; }
+        #taskList li .task-text { font-size: 0.95rem; color: #374151; word-break: break-word; }
+        #taskList li.completed .task-text { text-decoration: line-through; color: #9ca3af; }
+        #taskList li.completed { opacity: 0.7; background-color: #f9fafb; }
+        #taskList li .edit-input { flex-grow: 1; padding: 0.3rem 0.5rem; border: 1px solid #d1d5db; border-radius: 0.25rem; margin-right: 0.5rem; font-size: 0.95rem; outline: none; min-width: 0; }
+        #taskList li .task-actions { display: flex; align-items: center; gap: 0.1rem; flex-shrink: 0; }
+         @media (min-width: 640px) { #taskList li .task-actions { gap: 0.25rem; } }
+        #taskList li .task-actions button { background: none; border: none; cursor: pointer; padding: 0.35rem; color: #9ca3af; border-radius: 9999px; position: relative; }
+        #taskList li .task-actions button ion-icon { display: block; font-size: 1.1rem; }
+        #taskList li .task-actions button:hover { color: #4b5563; background-color: #f3f4f6; }
+        #taskList li .task-actions button:disabled { cursor: not-allowed; opacity: 0.5; background-color: transparent !important; color: #d1d5db !important; }
+        .tooltip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-5px); background-color: #374151; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; white-space: nowrap; opacity: 0; visibility: hidden; transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out; z-index: 10; pointer-events: none; }
+        .task-actions button:hover .tooltip { opacity: 1; visibility: visible; }
+        .edit-actions button { padding: 0.3rem 0.6rem; font-size: 0.8rem; border-radius: 0.25rem; }
+        .edit-actions .save-btn { background-color: #16a34a; color: white; margin-right: 0.25rem;}
+        .edit-actions .save-btn:hover { background-color: #15803d; }
+        .edit-actions .cancel-btn { background-color: #e5e7eb; color: #4b5563; }
+        .edit-actions .cancel-btn:hover { background-color: #d1d5db; }
+        #taskList li.dragging { opacity: 0.4; background-color: #eef2ff; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .drag-over-placeholder { height: 50px; background-color: #f3f4f6; border: 2px dashed #cbd5e1; margin: 0.25rem 0; border-radius: 0.375rem; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 0.875rem; }
+        .flash { animation: flash-bg 0.7s ease-out; }
+        @keyframes flash-bg { 0% { background-color: #dbeafe; } 100% { background-color: transparent; } }
+        #taskList li.completed.flash { animation: none; }
+        .empty-state { text-align: center; padding: 2rem 1rem; color: #6b7280; border: 2px dashed #e5e7eb; border-radius: 0.5rem; margin-top: 1rem; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+         .empty-state ion-icon { font-size: 2.5rem; margin-bottom: 0.5rem; display: block;}
+        .status-details-normal, .status-details-pre-embarque { display: none; }
+        .status-details-normal.visible, .status-details-pre-embarque.visible { display: block; }
+    </style>
+</head>
+<body class="p-4 md:p-6 lg:p-8">
+    <div class="max-w-7xl mx-auto">
+
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-800 mb-6 md:mb-10">Dashboard Offshore</h1>
+
+        <div class="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
+
+            <div class="card order-2 md:order-1 md:col-span-1 lg:col-span-2 lg:row-start-1">
+                 <h2><ion-icon name="radio-outline" class="text-blue-600"></ion-icon>Status Atual</h2>
+                 <div id="statusResult" class="space-y-3">
+                     <div class="text-center mb-4"> <span id="currentStatus" class="font-semibold status-badge text-base md:text-lg">--</span> </div>
+                     <div id="statusDetailsNormal" class="status-details-normal space-y-2 text-xs sm:text-sm">
+                         <p class="flex items-center gap-2"><ion-icon name="calendar-clear-outline" class="text-gray-500 w-4 h-4 flex-shrink-0"></ion-icon><span>Início Período:</span> <strong id="currentPeriodStart" class="ml-auto text-gray-700 text-right">--</strong></p>
+                         <p class="flex items-center gap-2"><ion-icon name="flag-outline" class="text-gray-500 w-4 h-4 flex-shrink-0"></ion-icon><span>Fim Período:</span> <strong id="currentPeriodEnd" class="ml-auto text-gray-700 text-right">--</strong></p>
+                         <p class="flex items-center gap-2"><ion-icon name="hourglass-outline" class="text-gray-500 w-4 h-4 flex-shrink-0"></ion-icon><span>Dias Restantes:</span> <strong id="daysRemaining" class="ml-auto text-gray-700 text-right">--</strong></p>
+                         <hr class="my-3 border-gray-100">
+                         <p class="flex items-center gap-2"><ion-icon name="boat-outline" class="text-blue-600 w-4 h-4 flex-shrink-0"></ion-icon><span>Próx. Embarque:</span> <strong id="nextEmbarkNormal" class="ml-auto text-blue-700 text-right">--</strong></p>
+                         <p class="flex items-center gap-2"><ion-icon name="cafe-outline" class="text-orange-600 w-4 h-4 flex-shrink-0"></ion-icon><span>Próx. Folga:</span> <strong id="nextLeaveNormal" class="ml-auto text-orange-700 text-right">--</strong></p>
+                    </div>
+                     <div id="statusDetailsPreEmbarque" class="status-details-pre-embarque space-y-2 text-sm text-center">
+                         <p class="flex items-center justify-center gap-2"><ion-icon name="alert-circle-outline" class="text-yellow-600 text-lg"></ion-icon><span>Embarque Amanhã:</span> <strong id="nextEmbarkPre" class="text-yellow-700">--</strong></p>
+                         <p class="text-xs text-gray-500">(Prepare-se para o embarque!)</p>
+                     </div>
+                 </div>
+                 <div id="loadingMessage" class="text-gray-500 mt-4 hidden text-center text-sm">
+                     <ion-icon name="information-circle-outline" class="text-lg inline-block mr-1"></ion-icon>
+                     <span>Por favor, insira uma data de início válida.</span>
+                 </div>
+            </div>
+
+            <div class="card order-1 md:order-3 md:col-span-1 lg:col-span-3 lg:row-start-1">
+                 <h2><ion-icon name="settings-outline" class="text-gray-600"></ion-icon>Configuração</h2>
+                 <label for="initialEmbarkDate" class="block text-sm font-medium text-gray-600 mb-2">Primeiro dia de embarque:</label>
+                 <input type="date" id="initialEmbarkDate" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                 <p class="text-xs text-gray-500 mt-2">Define o início do ciclo 14x14.</p>
+            </div>
+
+             <div class="card order-3 md:order-4 md:col-span-1 lg:col-span-3 lg:row-start-2">
+                 <h2><ion-icon name="calendar-outline" class="text-green-600"></ion-icon>Calendário</h2>
+                 <div class="calendar-nav flex justify-between items-center mb-4">
+                    <button id="prevMonthBtn" aria-label="Mês anterior" class="inline-flex items-center gap-1"><ion-icon name="chevron-back-outline"></ion-icon> Anterior</button>
+                    <span id="calendarMonthYear">--</span>
+                    <button id="nextMonthBtn" aria-label="Próximo mês" class="inline-flex items-center gap-1">Próximo <ion-icon name="chevron-forward-outline"></ion-icon></button>
+                 </div>
+                 <div id="calendarView">
+                    <table class="calendar w-full table-fixed border-collapse">
+                        <thead><tr><th>Dom</th><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th></tr></thead>
+                        <tbody id="calendarGrid" class="border-t border-gray-200"></tbody>
+                    </table>
+                    <div id="calendarLoadingMessage" class="text-gray-500 mt-4 hidden text-center">Gerando calendário...</div>
+                    <div class="mt-5 pt-3 border-t border-gray-100 flex flex-wrap justify-center gap-x-3 gap-y-2 text-xs text-gray-600">
+                       <span class="flex items-center"><span class="inline-block w-3 h-3 rounded-full mr-1.5 status-pre-embarque border border-gray-200 flex-shrink-0"></span>Pré-Emb.</span> <span class="flex items-center"><span class="inline-block w-3 h-3 rounded-full mr-1.5 status-embarcado border border-gray-200 flex-shrink-0"></span>Embarc.</span> <span class="flex items-center"><span class="inline-block w-3 h-3 rounded-full mr-1.5 status-desembarque border border-gray-200 flex-shrink-0"></span>Desemb.</span> <span class="flex items-center"><span class="inline-block w-3 h-3 rounded-full mr-1.5 status-folga border border-gray-200 flex-shrink-0"></span>Folga</span> <span class="flex items-center"><span class="inline-block w-3 h-3 rounded-full mr-1.5 current-day flex-shrink-0"></span>Hoje</span>
+                    </div>
+                 </div>
+            </div>
+
+            <div class="card order-4 md:order-2 md:col-span-1 lg:col-span-2 lg:row-start-2">
+                 <h2><ion-icon name="sync-circle-outline" class="text-purple-600"></ion-icon>Próximos Ciclos</h2>
+                 <ul id="upcomingCycles" class="space-y-3"> </ul>
+            </div>
+
+            <div class="card order-5 md:order-5 md:col-span-2 lg:col-span-5 lg:row-start-3">
+                 <h2><ion-icon name="list-outline" class="text-cyan-600"></ion-icon>Lista de Tarefas</h2>
+                 <div class="flex flex-col sm:flex-row mb-4 gap-2">
+                    <input type="text" id="newTaskInput" placeholder="O que precisa ser feito?" class="flex-grow px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    <button id="addTaskBtn" class="px-4 sm:px-5 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out inline-flex items-center justify-center gap-1 flex-shrink-0"><ion-icon name="add-circle-outline" class="text-lg"></ion-icon> Adicionar</button>
+                 </div>
+                 <ul id="taskList"> </ul>
+            </div>
+
+        </div> </div> <script>
+        // === DOM Element Selection ===
+        const initialEmbarkDateInput = document.getElementById('initialEmbarkDate');
+        const statusResultDiv = document.getElementById('statusResult');
+        const loadingMessageDiv = document.getElementById('loadingMessage');
+        const currentStatusSpan = document.getElementById('currentStatus');
+        const statusDetailsNormalDiv = document.getElementById('statusDetailsNormal');
+        const statusDetailsPreEmbarqueDiv = document.getElementById('statusDetailsPreEmbarque');
+        const currentPeriodStartSpan = document.getElementById('currentPeriodStart');
+        const currentPeriodEndSpan = document.getElementById('currentPeriodEnd');
+        const daysRemainingSpan = document.getElementById('daysRemaining');
+        const nextEmbarkNormalSpan = document.getElementById('nextEmbarkNormal');
+        const nextLeaveNormalSpan = document.getElementById('nextLeaveNormal');
+        const nextEmbarkPreSpan = document.getElementById('nextEmbarkPre');
+        const upcomingCyclesUl = document.getElementById('upcomingCycles');
+        const prevMonthBtn = document.getElementById('prevMonthBtn');
+        const nextMonthBtn = document.getElementById('nextMonthBtn');
+        const calendarMonthYearSpan = document.getElementById('calendarMonthYear');
+        const calendarGridBody = document.getElementById('calendarGrid');
+        const calendarLoadingMessageDiv = document.getElementById('calendarLoadingMessage');
+        const newTaskInput = document.getElementById('newTaskInput');
+        const addTaskBtn = document.getElementById('addTaskBtn');
+        const taskListUl = document.getElementById('taskList');
+
+        // === Constants ===
+        const WORK_DAYS = 14;
+        const LEAVE_DAYS = 14;
+        const CYCLE_DAYS = WORK_DAYS + LEAVE_DAYS;
+        const MS_PER_DAY = 1000 * 60 * 60 * 24;
+        const MONTH_NAMES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        const STATUS_ICONS = {
+             'Embarcado': 'boat-outline', 'De Folga': 'cafe-outline', 'Pré-Embarque': 'briefcase-outline', 'Desembarque': 'flag-outline'
+        };
+
+        // === State Variables ===
+        let currentCalendarDate = new Date();
+        let referenceEmbarkDateUTC = null;
+        let tasks = [];
+        let draggedItem = null;
+        let placeholder = null;
+
+        // === Helper Functions ===
+        function formatDate(date) {
+             if (!date || !(date instanceof Date) || isNaN(date)) { return '--'; }
+             const day = String(date.getUTCDate()).padStart(2, '0');
+             const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+             const year = date.getUTCFullYear();
+             return `${day}/${month}/${year}`;
+        }
+        function addDays(date, days) {
+             const result = new Date(date);
+             result.setUTCDate(result.getUTCDate() + days);
+             return result;
+        }
+        function diffDays(date1, date2) {
+             const utc1 = Date.UTC(date1.getUTCFullYear(), date1.getUTCMonth(), date1.getUTCDate());
+             const utc2 = Date.UTC(date2.getUTCFullYear(), date2.getUTCMonth(), date2.getUTCDate());
+             return Math.floor((utc2 - utc1) / MS_PER_DAY);
+        }
+
+        // === Escala Calculation Logic ===
+        function getScheduleStatusForDate(targetDateUTC, refEmbarkDateUTC) {
+             if (!refEmbarkDateUTC || isNaN(refEmbarkDateUTC)) { return null; }
+             const daysSinceInitial = diffDays(refEmbarkDateUTC, targetDateUTC);
+             let dayInCycle = daysSinceInitial % CYCLE_DAYS;
+             if (dayInCycle < 0) { dayInCycle += CYCLE_DAYS; }
+             if (dayInCycle === CYCLE_DAYS - 1) { return 'Pré-Embarque'; }
+             else if (dayInCycle >= 0 && dayInCycle < WORK_DAYS) { return 'Embarcado'; }
+             else { return 'De Folga'; }
+         }
+
+        // === Calendar Generation Logic ===
+        function generateCalendar(year, month) {
+            calendarLoadingMessageDiv.classList.add('hidden');
+            calendarGridBody.innerHTML = '';
+            calendarMonthYearSpan.textContent = `${MONTH_NAMES[month]} ${year}`;
+            const firstDayOfMonth = new Date(Date.UTC(year, month, 1));
+            const daysInMonth = new Date(year, month + 1, 0).getUTCDate();
+            const firstDayWeekday = firstDayOfMonth.getUTCDay();
+            const today = new Date();
+            const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+            let date = 1;
+            let calendarHtml = '';
+            for (let i = 0; i < 6; i++) {
+                let rowHtml = '<tr>'; let daysInRow = 0;
+                for (let j = 0; j < 7; j++) {
+                    if (i === 0 && j < firstDayWeekday) { rowHtml += '<td></td>'; }
+                    else if (date > daysInMonth) { rowHtml += '<td></td>'; }
+                    else { daysInRow++; const currentDate = new Date(Date.UTC(year, month, date)); let classes = 'day-cell'; let iconHtml = '';
+                        if (referenceEmbarkDateUTC) {
+                            const status = getScheduleStatusForDate(currentDate, referenceEmbarkDateUTC);
+                             const daysSinceRef = diffDays(referenceEmbarkDateUTC, currentDate); let dayInCycleCurrent = daysSinceRef >= 0 ? daysSinceRef % CYCLE_DAYS : (daysSinceRef % CYCLE_DAYS + CYCLE_DAYS) % CYCLE_DAYS;
+                            if (status === 'Embarcado') { classes += ' status-embarcado'; iconHtml = ' <ion-icon name="boat-outline" class="calendar-icon" aria-hidden="true"></ion-icon>'; }
+                            else if (status === 'Pré-Embarque') { classes += ' status-pre-embarque'; iconHtml = ' <ion-icon name="business-outline" class="calendar-icon" aria-hidden="true"></ion-icon>'; }
+                            else if (status === 'De Folga') { if (dayInCycleCurrent === WORK_DAYS) classes += ' status-desembarque'; else classes += ' status-folga'; iconHtml = ' <ion-icon name="home-outline" class="calendar-icon" aria-hidden="true"></ion-icon>'; }
+                        }
+                        if (diffDays(currentDate, todayUTC) === 0) { classes += ' current-day'; }
+                        rowHtml += `<td class="${classes}">${date}${iconHtml}</td>`; date++;
+                    }
+                } rowHtml += '</tr>'; if (daysInRow > 0 || i === 0 || date <= daysInMonth) calendarHtml += rowHtml; if (date > daysInMonth && daysInRow === 0) break;
+            } calendarGridBody.innerHTML = calendarHtml;
+        }
+
+        // === Dashboard Update Logic ===
+        function updateDashboard() {
+             const initialDateStr = initialEmbarkDateInput.value;
+             if (!initialDateStr) { showLoadingMessage("Por favor, insira uma data de início válida."); clearDashboard(); clearCalendar(); return; }
+             const dateParts = initialDateStr.split('-'); if (dateParts.length !== 3) { showLoadingMessage("Formato de data inválido."); clearDashboard(); clearCalendar(); return; }
+             const [year, month, day] = dateParts.map(Number); const initialEmbarkDate = new Date(Date.UTC(year, month - 1, day)); if (isNaN(initialEmbarkDate.getTime()) || initialEmbarkDate.getUTCFullYear() !== year || initialEmbarkDate.getUTCMonth() !== month - 1 || initialEmbarkDate.getUTCDate() !== day) { showLoadingMessage("Data inválida."); clearDashboard(); clearCalendar(); return; }
+             referenceEmbarkDateUTC = initialEmbarkDate; hideLoadingMessage();
+             const today = new Date(); const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())); const currentStatus = getScheduleStatusForDate(todayUTC, referenceEmbarkDateUTC); let statusClass = '', statusIcon = 'help-circle-outline', isDisembarkDay = false; const daysSinceInitial = diffDays(referenceEmbarkDateUTC, todayUTC); let dayInCycle = daysSinceInitial >= 0 ? daysSinceInitial % CYCLE_DAYS : (daysSinceInitial % CYCLE_DAYS + CYCLE_DAYS) % CYCLE_DAYS; const currentCycleStartDateUTC = addDays(todayUTC, -dayInCycle); let currentPeriodStartDateUTC, currentPeriodEndDateUTC, nextEmbarkDateUTC, nextLeaveStartDateUTC;
+             statusDetailsNormalDiv.classList.remove('visible'); statusDetailsPreEmbarqueDiv.classList.remove('visible');
+             if (currentStatus === 'Pré-Embarque') { statusClass = 'status-pre-embarque-badge'; statusIcon = STATUS_ICONS['Pré-Embarque']; statusDetailsPreEmbarqueDiv.classList.add('visible'); nextEmbarkDateUTC = addDays(todayUTC, 1); nextEmbarkPreSpan.textContent = formatDate(nextEmbarkDateUTC); currentPeriodStartSpan.textContent = '--'; currentPeriodEndSpan.textContent = '--'; daysRemainingSpan.textContent = '--'; nextEmbarkNormalSpan.textContent = '--'; nextLeaveNormalSpan.textContent = '--';
+             } else { statusDetailsNormalDiv.classList.add('visible');
+                 if (currentStatus === 'Embarcado') { statusClass = 'status-embarcado-badge'; statusIcon = STATUS_ICONS['Embarcado']; currentPeriodStartDateUTC = currentCycleStartDateUTC; currentPeriodEndDateUTC = addDays(currentCycleStartDateUTC, WORK_DAYS - 1); nextEmbarkDateUTC = addDays(currentCycleStartDateUTC, CYCLE_DAYS); nextLeaveStartDateUTC = addDays(currentCycleStartDateUTC, WORK_DAYS); }
+                 else { statusClass = 'status-folga-badge'; statusIcon = STATUS_ICONS['De Folga']; if (dayInCycle === WORK_DAYS) { statusIcon = STATUS_ICONS['Desembarque']; statusClass = 'status-desembarque-badge'; isDisembarkDay = true; } currentPeriodStartDateUTC = addDays(currentCycleStartDateUTC, WORK_DAYS); currentPeriodEndDateUTC = addDays(currentCycleStartDateUTC, CYCLE_DAYS - 1); nextEmbarkDateUTC = addDays(currentCycleStartDateUTC, CYCLE_DAYS); nextLeaveStartDateUTC = addDays(currentCycleStartDateUTC, CYCLE_DAYS + WORK_DAYS); }
+                 const daysRemaining = diffDays(todayUTC, currentPeriodEndDateUTC); daysRemainingSpan.textContent = daysRemaining >= 0 ? `${daysRemaining} dia(s)` : 'Erro'; currentPeriodStartSpan.textContent = formatDate(currentPeriodStartDateUTC); currentPeriodEndSpan.textContent = formatDate(currentPeriodEndDateUTC); nextEmbarkNormalSpan.textContent = formatDate(nextEmbarkDateUTC); nextLeaveNormalSpan.textContent = formatDate(nextLeaveStartDateUTC);
+             }
+             let statusText = currentStatus || '--'; if (isDisembarkDay) statusText = 'Desembarque'; currentStatusSpan.innerHTML = `<ion-icon name="${statusIcon}" class="text-lg"></ion-icon> <span>${statusText}</span>`; currentStatusSpan.className = `font-semibold status-badge text-lg ${statusClass}`;
+             upcomingCyclesUl.innerHTML = ''; let loopCycleStartDate = addDays(currentCycleStartDateUTC, CYCLE_DAYS); let cyclesFound = false;
+             for (let i = 0; i < 4; i++) { cyclesFound = true; const preEmbarkDate = addDays(loopCycleStartDate, -1); const embarkStart = loopCycleStartDate; const embarkEnd = addDays(embarkStart, WORK_DAYS - 1); const leaveStart = addDays(embarkEnd, 1); const leaveEnd = addDays(leaveStart, LEAVE_DAYS - 1); const li = document.createElement('li'); li.className = 'p-3 border border-gray-100 rounded-md bg-gray-50 text-xs hover:bg-gray-100 transition duration-150'; li.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="font-medium text-gray-700">Ciclo ${i + 1}</span><span class="text-yellow-700">(Pré: ${formatDate(preEmbarkDate)})</span></div><div class="text-gray-600"><span class="text-blue-700"><strong>Embarque:</strong> ${formatDate(embarkStart)} - ${formatDate(embarkEnd)}</span><br><span class="text-orange-700"><strong>Folga:</strong> ${formatDate(leaveStart)} <span class="text-green-700 font-semibold">(Desemb.)</span> - ${formatDate(leaveEnd)}</span></div>`; upcomingCyclesUl.appendChild(li); loopCycleStartDate = addDays(loopCycleStartDate, CYCLE_DAYS); }
+             if (!cyclesFound && referenceEmbarkDateUTC) upcomingCyclesUl.innerHTML = `<li class="text-gray-500 italic p-4 text-center">Não foi possível calcular os ciclos.</li>`; else if (!referenceEmbarkDateUTC) upcomingCyclesUl.innerHTML = `<li class="empty-state !mt-0 !border-0 !p-0"><ion-icon name="information-circle-outline"></ion-icon>Insira uma data de início válida.</li>`;
+             currentCalendarDate = new Date(); generateCalendar(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth()); localStorage.setItem('initialEmbarkDate', initialDateStr);
+        }
+
+        // === UI Feedback & Cleanup Functions ===
+        function showLoadingMessage(message) { loadingMessageDiv.querySelector('span').textContent = message; loadingMessageDiv.classList.remove('hidden'); statusResultDiv.classList.add('hidden'); }
+        function hideLoadingMessage() { loadingMessageDiv.classList.add('hidden'); statusResultDiv.classList.remove('hidden'); }
+        function clearDashboard() { currentStatusSpan.innerHTML = '--'; currentStatusSpan.className = 'font-semibold status-badge text-lg'; statusDetailsNormalDiv.classList.remove('visible'); statusDetailsPreEmbarqueDiv.classList.remove('visible'); currentPeriodStartSpan.textContent = '--'; currentPeriodEndSpan.textContent = '--'; daysRemainingSpan.textContent = '--'; nextEmbarkNormalSpan.textContent = '--'; nextLeaveNormalSpan.textContent = '--'; nextEmbarkPreSpan.textContent = '--'; upcomingCyclesUl.innerHTML = `<li class="empty-state !mt-0 !border-0 !p-0"><ion-icon name="information-circle-outline"></ion-icon>Insira uma data de início para ver os próximos ciclos.</li>`; }
+        function clearCalendar() { calendarMonthYearSpan.textContent = '--'; calendarGridBody.innerHTML = '<tr><td colspan="7" class="text-gray-400 p-4 italic">Insira uma data de início para gerar o calendário.</td></tr>'; referenceEmbarkDateUTC = null; const now = new Date(); generateCalendar(now.getFullYear(), now.getMonth()); }
+
+        // === Task List Functions ===
+        function saveTasks() { localStorage.setItem('tasks', JSON.stringify(tasks.map(({ editing, ...rest }) => rest))); }
+        function loadTasks() { const storedTasks = localStorage.getItem('tasks'); tasks = storedTasks ? JSON.parse(storedTasks).map(task => ({ ...task, editing: false })) : []; renderTasks(); }
+        function renderTaskItem(task) { const li = document.createElement('li'); li.setAttribute('data-id', task.id); li.className = `task-item ${task.completed ? 'completed' : ''}`; li.setAttribute('draggable', !task.editing); const handle = document.createElement('span'); handle.className = 'drag-handle'; handle.innerHTML = '<ion-icon name="reorder-two-outline" aria-hidden="true"></ion-icon>'; handle.setAttribute('aria-label', 'Arrastar para reordenar'); handle.addEventListener('mousedown', e => e.stopPropagation()); li.appendChild(handle); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = task.completed; checkbox.disabled = task.editing; checkbox.className = 'form-checkbox h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 transition flex-shrink-0'; checkbox.setAttribute('aria-label', `Marcar tarefa ${task.text} como ${task.completed ? 'pendente' : 'concluída'}`); checkbox.addEventListener('change', () => toggleTaskStatus(task.id)); li.appendChild(checkbox); const contentDiv = document.createElement('div'); contentDiv.className = 'task-text-content'; if (task.editing) { const input = document.createElement('input'); input.type = 'text'; input.value = task.text; input.className = 'edit-input'; input.setAttribute('aria-label', 'Editar texto da tarefa'); input.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveEditedTask(task.id, input.value); if (e.key === 'Escape') cancelEditTask(task.id); }); contentDiv.appendChild(input); setTimeout(() => input.focus(), 0); } else { const textSpan = document.createElement('span'); textSpan.className = 'task-text'; textSpan.textContent = task.text; textSpan.addEventListener('dblclick', () => { if (!task.completed) startEditTask(task.id); }); contentDiv.appendChild(textSpan); } li.appendChild(contentDiv); const actionsDiv = document.createElement('div'); actionsDiv.className = 'task-actions ml-auto flex-shrink-0'; if (task.editing) { actionsDiv.classList.add('edit-actions'); const saveBtn = document.createElement('button'); saveBtn.textContent = 'Salvar'; saveBtn.className = 'save-btn'; saveBtn.setAttribute('aria-label', 'Salvar edição da tarefa'); saveBtn.onclick = () => saveEditedTask(task.id, li.querySelector('.edit-input').value); actionsDiv.appendChild(saveBtn); const cancelBtn = document.createElement('button'); cancelBtn.textContent = 'Cancelar'; cancelBtn.className = 'cancel-btn'; cancelBtn.setAttribute('aria-label', 'Cancelar edição da tarefa'); cancelBtn.onclick = () => cancelEditTask(task.id); actionsDiv.appendChild(cancelBtn); } else { const editBtn = document.createElement('button'); editBtn.disabled = task.completed; editBtn.setAttribute('aria-label', 'Editar Tarefa'); editBtn.innerHTML = '<ion-icon name="pencil-outline" aria-hidden="true"></ion-icon><span class="tooltip">Editar</span>'; editBtn.onclick = () => startEditTask(task.id); actionsDiv.appendChild(editBtn); const deleteBtn = document.createElement('button'); deleteBtn.setAttribute('aria-label', 'Excluir Tarefa'); deleteBtn.innerHTML = '<ion-icon name="trash-outline" aria-hidden="true"></ion-icon><span class="tooltip">Excluir</span>'; deleteBtn.onclick = () => { if (confirm(`Tem certeza que deseja excluir a tarefa "${task.text}"?`)) deleteTask(task.id); }; actionsDiv.appendChild(deleteBtn); } li.appendChild(actionsDiv); if (!task.editing) { li.addEventListener('dragstart', handleDragStart); li.addEventListener('dragover', handleDragOver); li.addEventListener('dragleave', handleDragLeave); li.addEventListener('drop', handleDrop); li.addEventListener('dragend', handleDragEnd); } return li; }
+        function renderTasks(highlightId = null) { taskListUl.innerHTML = ''; if (tasks.length === 0) { taskListUl.innerHTML = `<li class="empty-state !border-0 !p-6"><ion-icon name="clipboard-outline"></ion-icon>Sua lista de tarefas está vazia.<br>Adicione uma tarefa acima!</li>`; return; } tasks.forEach(task => { const li = renderTaskItem(task); if (task.id === highlightId) { li.classList.add('flash'); li.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } taskListUl.appendChild(li); }); }
+        function addTask() { const text = newTaskInput.value.trim(); if (text === '') return; const newTask = { id: Date.now(), text: text, completed: false, editing: false }; tasks.push(newTask); saveTasks(); renderTasks(newTask.id); newTaskInput.value = ''; newTaskInput.focus(); }
+        function toggleTaskStatus(id) { tasks = tasks.map(task => task.id === id ? { ...task, completed: !task.completed, editing: false } : task); saveTasks(); renderTasks(); }
+        function startEditTask(id) { tasks = tasks.map(task => ({ ...task, editing: task.id === id })); renderTasks(); }
+        function cancelEditTask(id) { tasks = tasks.map(task => (task.id === id ? { ...task, editing: false } : task)); renderTasks(); }
+        function saveEditedTask(id, newText) { const trimmedText = newText.trim(); if (trimmedText === '') { alert("O texto da tarefa não pode ficar vazio."); const inputField = taskListUl.querySelector(`li[data-id="${id}"] .edit-input`); if (inputField) inputField.focus(); return; } tasks = tasks.map(task => task.id === id ? { ...task, text: trimmedText, editing: false } : task); saveTasks(); renderTasks(id); }
+        function deleteTask(id) { tasks = tasks.filter(task => task.id !== id); saveTasks(); renderTasks(); }
+
+        // === Drag and Drop Functions ===
+        function createPlaceholder() { if (!placeholder) { placeholder = document.createElement('li'); placeholder.className = 'drag-over-placeholder'; placeholder.innerHTML = `<span>Mova aqui</span>`; } return placeholder; }
+        function handleDragStart(e) { draggedItem = e.target.closest('li'); if (!draggedItem) return; e.dataTransfer.setData('text/plain', draggedItem.dataset.id); e.dataTransfer.effectAllowed = 'move'; setTimeout(() => { if (draggedItem) draggedItem.classList.add('dragging'); }, 0); createPlaceholder(); }
+        function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; const targetItem = e.target.closest('li:not(.dragging):not(.drag-over-placeholder)'); const currentPlaceholder = taskListUl.querySelector('.drag-over-placeholder'); if (!targetItem) { if (!taskListUl.contains(currentPlaceholder) || taskListUl.lastElementChild !== currentPlaceholder) { taskListUl.appendChild(createPlaceholder()); } return; }; if (targetItem === draggedItem || !placeholder) return; const rect = targetItem.getBoundingClientRect(); const offsetY = e.clientY - rect.top; if (offsetY < rect.height / 2) { if (targetItem.previousSibling !== placeholder) taskListUl.insertBefore(placeholder, targetItem); } else { if (targetItem.nextSibling !== placeholder) taskListUl.insertBefore(placeholder, targetItem.nextSibling); } }
+        function handleDragLeave(e) { if (!taskListUl.contains(e.relatedTarget) && placeholder && placeholder.parentNode === taskListUl) { placeholder.remove(); placeholder = null; } }
+        function handleDrop(e) { e.preventDefault(); const droppedOnPlaceholder = taskListUl.querySelector('.drag-over-placeholder'); if (!draggedItem || !droppedOnPlaceholder) { handleDragEnd(); return; } const draggedId = parseInt(draggedItem.dataset.id); const draggedIndex = tasks.findIndex(task => task.id === draggedId); if (draggedIndex === -1) { handleDragEnd(); return; } const placeholderIndex = Array.from(taskListUl.children).indexOf(droppedOnPlaceholder); const [movedTask] = tasks.splice(draggedIndex, 1); const adjustedIndex = (draggedIndex < placeholderIndex) ? placeholderIndex - 1 : placeholderIndex; tasks.splice(adjustedIndex, 0, movedTask); droppedOnPlaceholder.remove(); placeholder = null; if (draggedItem) draggedItem.classList.remove('dragging'); draggedItem = null; saveTasks(); renderTasks(); }
+        function handleDragEnd() { if (placeholder && placeholder.parentNode) { placeholder.remove(); } placeholder = null; if (draggedItem) { draggedItem.classList.remove('dragging'); } taskListUl.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging')); draggedItem = null; }
+
+        // === Event Listeners ===
+        initialEmbarkDateInput.addEventListener('change', updateDashboard);
+        prevMonthBtn.addEventListener('click', () => { if (!referenceEmbarkDateUTC) return; currentCalendarDate.setUTCMonth(currentCalendarDate.getUTCMonth() - 1); generateCalendar(currentCalendarDate.getUTCFullYear(), currentCalendarDate.getUTCMonth()); });
+        nextMonthBtn.addEventListener('click', () => { if (!referenceEmbarkDateUTC) return; currentCalendarDate.setUTCMonth(currentCalendarDate.getUTCMonth() + 1); generateCalendar(currentCalendarDate.getUTCFullYear(), currentCalendarDate.getUTCMonth()); });
+        addTaskBtn.addEventListener('click', addTask);
+        newTaskInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(); });
+        taskListUl.addEventListener('dragleave', handleDragLeave);
+
+        // === Initialization ===
+        function initializeApp() {
+             const savedDate = localStorage.getItem('initialEmbarkDate');
+             if (savedDate) { initialEmbarkDateInput.value = savedDate; updateDashboard(); }
+             else { clearDashboard(); clearCalendar(); showLoadingMessage("Por favor, insira uma data de início válida."); }
+             loadTasks();
+         }
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+    </script>
+
+</body>
+</html>
